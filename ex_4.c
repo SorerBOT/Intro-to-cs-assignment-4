@@ -23,8 +23,8 @@ typedef struct {
     int score;
 } Player;
 typedef struct {
-    int x;
-    int y;
+    int firstInstance;
+    int secondInstance;
 } Position;
 typedef struct {
     char name[MAX_OBJECT_NAME_LENGTH];
@@ -35,6 +35,7 @@ typedef struct {
     int boardDim;
     int numPlayers;
     Player players[MAX_PLAYERS];
+    int numObjects;
     Object objects[MAX_OBJECTS];
 } Board;
 /**
@@ -48,7 +49,7 @@ Board initialiseBoard(int argc, char** argv);
  * 
  * @return {void}
 */
-
+void printBoard(Board board);
 int main(int argc, char** argv) {
     Board board = initialiseBoard( argc, argv );
     if ( !board.isSuccess ) return 0;
@@ -108,14 +109,18 @@ Board initialiseBoard(int argc, char** argv) {
         Object object;
         strcpy( object.name, argv[FIRST_OBJECT_INDEX + j] );
         board.objects[i] = object;
+        board.numObjects++;
     }
     int FIRST_POSITION_INDEX = FIRST_OBJECT_INDEX + j;
     // Parsing the positions
     for (int k = 0; k < num_of_objects; k += 2) {
         Position position;
-        position.x = atoi( argv[FIRST_POSITION_INDEX + k] );
-        position.y = atoi( argv[FIRST_POSITION_INDEX + k + 1] );
-        
+        position.firstInstance = atoi( argv[FIRST_POSITION_INDEX + k] );
+        position.secondInstance = atoi( argv[FIRST_POSITION_INDEX + k + 1] );
+        if (position.firstInstance > board_length || position.secondInstance > board_length) {
+            printf( "%s\n", INVALID_INPUT );
+            return board;
+        }
         board.objects[k].position = position;
     }
     board.isSuccess = true;
