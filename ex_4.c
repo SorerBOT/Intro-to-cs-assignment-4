@@ -122,7 +122,7 @@ Board initialiseBoard(int argc, char** argv) {
     // Checking for repeating positions
     for (int k = 0; k < num_of_pos; k++) {
         for (int p = k + 1; p < num_of_pos; p++) {
-            if ( atoi( argv[k] ) == atoi( argv[p] ) ) {
+            if ( atoi( argv[FIRST_POSITION_INDEX + k] ) == atoi( argv[FIRST_POSITION_INDEX + p] ) ) {
                 printf( "%s\n", INVALID_INPUT );
                 return board;
             }
@@ -144,8 +144,25 @@ Board initialiseBoard(int argc, char** argv) {
 }
 
 void printBoard(Board board) {
-    printf("|");
+    int dividerLength = ( 6 * board.dim ) + 3;
+    printf("  |");
     for (int i = 0; i < board.dim; i++) {
         printf("  %d  |", i);
     }
+    printf("\n");
+    for (int i = 0; i < dividerLength; i++) printf("-");
+    printf("\n");
+    for (int i = 0; i < board.dim; i++) {
+        // Using x,y to simulate matrix notation
+        int x = i;
+        int y = 0;
+        printf("%d |", x);
+        for (; y < board.dim; y++) {
+            printf("(%d,%d)|", x, y);
+        }
+        printf("\n");
+        for (int i = 0; i < dividerLength; i++) printf("-");
+        printf("\n");
+    }
+    printf("\n");
 }
