@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        "chrono": "c",
+        "optional": "c",
+        "memory": "c",
+        "format": "c",
+        "functional": "c",
+        "iosfwd": "c",
+        "mutex": "c",
+        "span": "c",
+        "sstream": "c",
+        "stop_token": "c",
+        "tuple": "c",
+        "typeinfo": "c"
+    }
+}

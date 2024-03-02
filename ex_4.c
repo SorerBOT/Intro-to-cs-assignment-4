@@ -15,6 +15,7 @@
 #define MAX_OBJECTS ( ( MAX_BOARD_DIM * MAX_BOARD_DIM ) / 2 )
 #define MAX_PLAYER_NAME_LENGTH 20
 #define MAX_OBJECT_NAME_LENGTH 7
+#define LENGTH_OF_CELL 15
 
 typedef enum { false, true } bool;
 
@@ -29,6 +30,7 @@ typedef struct {
 typedef struct {
     char name[MAX_OBJECT_NAME_LENGTH];
     Position position;
+    bool isFound;
 } Object;
 typedef struct {
     bool isSuccess;
@@ -45,21 +47,41 @@ typedef struct {
 */
 Board initialiseBoard(int argc, char** argv);
 /**
+ * Runs the game
+*/
+void playGame(Board board);
+/**
  * Prints the initial state of the board
  * 
  * @return {void}
 */
-void printBoard(Board board);
+void printInitialBoard(Board board);
+/**
+ * Prints the current state of the board
+ * 
+ * @return {void}
+*/
+void printBoardState(Board board);
+/**
+ * Checks if there are objects which have not yet been found
+ * 
+ * @return {bool}
+*/
+bool handleCheckIsGameFinished(Board board);
+/**
+ * Finds the object located in the nth position
+*/
+Object handleGetObjectAtPosition(Board board, int n);
 /**
  * Initialises the board using initialiseBoard
- * Prints the board using printBoard
+ * Prints the board using printInitialBoard
  *  
  *
 */
 int main(int argc, char** argv) {
     Board board = initialiseBoard( argc, argv );
     if ( !board.isSuccess ) return 0;
-    printBoard(board);
+    playGame(board);
     return 0;
 }
 
@@ -112,16 +134,17 @@ Board initialiseBoard(int argc, char** argv) {
     }
     // Parsing the objects
     int j = 0;
-    for (; j < num_of_objects; j++) {
+    for ( ; j < num_of_objects; j++ ) {
         Object object;
+        object.isFound = false;
         strcpy( object.name, argv[FIRST_OBJECT_INDEX + j] );
-        board.objects[i] = object;
+        board.objects[j] = object;
         board.numObjects++;
     }
     int FIRST_POSITION_INDEX = FIRST_OBJECT_INDEX + j;
     // Checking for repeating positions
-    for (int k = 0; k < num_of_pos; k++) {
-        for (int p = k + 1; p < num_of_pos; p++) {
+    for ( int k = 0; k < num_of_pos; k++ ) {
+        for ( int p = k + 1; p < num_of_pos; p++ ) {
             if ( atoi( argv[FIRST_POSITION_INDEX + k] ) == atoi( argv[FIRST_POSITION_INDEX + p] ) ) {
                 printf( "%s\n", INVALID_INPUT );
                 return board;
@@ -129,7 +152,7 @@ Board initialiseBoard(int argc, char** argv) {
         }
     }
     // Parsing the positions
-    for (int k = 0; k < num_of_pos; k += 2) {
+    for ( int k = 0; k < num_of_pos; k += 2 ) {
         Position position;
         position.firstInstance = atoi( argv[FIRST_POSITION_INDEX + k] );
         position.secondInstance = atoi( argv[FIRST_POSITION_INDEX + k + 1] );
@@ -137,32 +160,83 @@ Board initialiseBoard(int argc, char** argv) {
             printf( "%s\n", INVALID_INPUT );
             return board;
         }
-        board.objects[k].position = position;
+        board.objects[k / 2].position = position;
     }
     board.isSuccess = true;
     return board;
 }
+void playGame( Board board ) {
+    int playerIndex = 0;
+    printInitialBoard( board );
 
-void printBoard(Board board) {
-    int dividerLength = ( 6 * board.dim ) + 3;
-    printf("  |");
-    for (int i = 0; i < board.dim; i++) {
-        printf("  %d  |", i);
+    while ( !handleCheckIsGameFinished( board ) ) {
+        printBoardState(board);
+        return;
     }
-    printf("\n");
-    for (int i = 0; i < dividerLength; i++) printf("-");
-    printf("\n");
-    for (int i = 0; i < board.dim; i++) {
+}
+void printInitialBoard( Board board ) {
+    int dividerLength = ( 6 * board.dim ) + 3;
+    printf( "Welcome to the Memory Card Game!\n" );
+    printf( "The game will be played on the following board:\n" );
+    printf( "  |" );
+    for ( int i = 0; i < board.dim; i++ ) {
+        printf( "  %d  |", i );
+    }
+    printf( "\n" );
+    for ( int i = 0; i < dividerLength; i++ ) printf( "-" );
+    printf( "\n" );
+    for ( int i = 0; i < board.dim; i++ ) {
         // Using x,y to simulate matrix notation
         int x = i;
         int y = 0;
-        printf("%d |", x);
-        for (; y < board.dim; y++) {
-            printf("(%d,%d)|", x, y);
+        printf( "%d |", x );
+        for ( ; y < board.dim; y++ ) {
+            printf( "(%d,%d)|", x, y );
         }
-        printf("\n");
-        for (int i = 0; i < dividerLength; i++) printf("-");
-        printf("\n");
+        printf( "\n" );
+        for ( int i = 0; i < dividerLength; i++ ) printf( "-" );
+        printf( "\n" );
     }
-    printf("\n");
+    printf( "And the following objects:\n" );
+
+    for ( int i = 0; i < board.numObjects; i++ ) {
+        printf( "%d. %s\n", i + 1, board.objects[i].name );
+    }
+}
+void printBoardState( Board board ) {
+    int boardLength = ( board.dim * board.dim );
+    int dividerLength = ( 16 * board.dim ) + 1;
+    printf( "Current board state:\n" );
+    for ( int i = 0; i < dividerLength; i++ ) printf( "-" );
+    printf( "\n" );
+    printf( "|" );        
+    for ( int i = 0; i < boardLength; i++ ) {
+        Object object = handleGetObjectAtPosition( board, i );
+        int objectNameLength = strlen( object.name );
+        int amountOfSpacesNeeded = LENGTH_OF_CELL - objectNameLength;
+        int amountOfSpacesNeededBefore = ( amountOfSpacesNeeded / 2 ) + ( amountOfSpacesNeededBefore % 2 );
+        int amountOfSpacesNeededAfter = ( amountOfSpacesNeeded - amountOfSpacesNeededBefore );
+
+        for ( int b = 0; b < amountOfSpacesNeededBefore; b++ ) printf(" ");
+        printf("%s", object.name);
+        for ( int b = 0; b < amountOfSpacesNeededAfter; b++ ) printf(" ");
+        printf("|");
+        if ( !( ( i + 1 ) % board.dim ) ) {
+            printf( "\n" );
+            for ( int b = 0; b < dividerLength; b++ ) printf( "-" );
+            printf( "\n" );
+            if ( ( i + 1 ) != boardLength ) printf( "|" );
+        }
+    }
+}
+bool handleCheckIsGameFinished(Board board) {
+    for (int i = 0; i < board.numObjects; i++) {
+        if ( !( board.objects[i].isFound ) ) return false;
+    }
+    return true;
+}
+Object handleGetObjectAtPosition( Board board, int n ) {
+    for ( int i = 0; i < board.numObjects; i++ ) {
+        if ( board.objects[i].position.firstInstance == n || board.objects[i].position.secondInstance == n ) return board.objects[i];
+    }
 }
