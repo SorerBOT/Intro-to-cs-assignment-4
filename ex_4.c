@@ -32,7 +32,7 @@ typedef struct {
 } Object;
 typedef struct {
     bool isSuccess;
-    int boardDim;
+    int dim;
     int numPlayers;
     Player players[MAX_PLAYERS];
     int numObjects;
@@ -50,9 +50,16 @@ Board initialiseBoard(int argc, char** argv);
  * @return {void}
 */
 void printBoard(Board board);
+/**
+ * Initialises the board using initialiseBoard
+ * Prints the board using printBoard
+ *  
+ *
+*/
 int main(int argc, char** argv) {
     Board board = initialiseBoard( argc, argv );
     if ( !board.isSuccess ) return 0;
+    printBoard(board);
     return 0;
 }
 
@@ -84,7 +91,7 @@ Board initialiseBoard(int argc, char** argv) {
         printf( "%s\n", INVALID_INPUT );
         return board;
     }
-    board.boardDim = boardDim;
+    board.dim = boardDim;
     char copy_of_player_names_string[MAX_PLAYERS * (MAX_PLAYER_NAME_LENGTH + 1)]; // 20 chars per player + # + \0
     strcpy( copy_of_player_names_string, argv[PLAYER_NAMES_INDEX] );
     char* playerName = strtok( copy_of_player_names_string, PLAYER_NAME_DELIMITER );
@@ -112,8 +119,17 @@ Board initialiseBoard(int argc, char** argv) {
         board.numObjects++;
     }
     int FIRST_POSITION_INDEX = FIRST_OBJECT_INDEX + j;
+    // Checking for repeating positions
+    for (int k = 0; k < num_of_pos; k++) {
+        for (int p = k + 1; p < num_of_pos; p++) {
+            if ( atoi( argv[k] ) == atoi( argv[p] ) ) {
+                printf( "%s\n", INVALID_INPUT );
+                return board;
+            }
+        }
+    }
     // Parsing the positions
-    for (int k = 0; k < num_of_objects; k += 2) {
+    for (int k = 0; k < num_of_pos; k += 2) {
         Position position;
         position.firstInstance = atoi( argv[FIRST_POSITION_INDEX + k] );
         position.secondInstance = atoi( argv[FIRST_POSITION_INDEX + k + 1] );
@@ -125,4 +141,11 @@ Board initialiseBoard(int argc, char** argv) {
     }
     board.isSuccess = true;
     return board;
+}
+
+void printBoard(Board board) {
+    printf("|");
+    for (int i = 0; i < board.dim; i++) {
+        printf("  %d  |", i);
+    }
 }
