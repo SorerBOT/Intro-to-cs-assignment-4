@@ -69,6 +69,12 @@ void printInitialBoard(Board board);
 */
 void printBoardState(Board* board);
 /**
+ * Prints winning miscellaneous
+ * 
+ * @return {void}
+*/
+void printWinner(Board board);
+/**
  * Checks if there are objects which have not yet been found
  * 
  * @return {bool}
@@ -174,67 +180,82 @@ Board initialiseBoard(int argc, char** argv) {
 void playGame( Board* board ) {
     int playerIndex = 0;
     printInitialBoard( *board );
-
+    printf( "Let the game begin!\n\n" );
+    printBoardState( board );
     while ( !handleCheckIsGameFinished( *board ) ) {
-        printBoardState( board );
         playTurn( board, &( board->players[playerIndex] ) );
         playerIndex = ( ( playerIndex + 1 ) % board->numPlayers );
     }
+    printWinner( *board );
 }
 void playTurn(Board* board, Player* player) {
     int first_x, first_y;
     int second_x, second_y;
+    int first_index;
+    int second_index;
     Object* firstObject;
+    Object* secondObject;
     bool isFinishedTurn = false;
     int boardLength = board->dim * board->dim;
 
-    printf( "It is %s's turn.\n", ( *player ).name );
-    
     while ( !isFinishedTurn ) {
-        printf( "Enter the coordinates of the first card (row col): " );
-        scanf(" %d %d", &first_x, &first_y);
-
-        printf( "Enter the coordinates of the second card (row col): " );
-        scanf(" %d %d", &second_x, &second_y);
-        // Validate coordinates
-        if (
-            first_x < 0 ||
-            first_x >= board->dim ||
-            first_y < 0 ||
-            first_y >= board->dim ||
-            second_x < 0 ||
-            second_x >= board->dim ||
-            second_y < 0 ||
-            second_y >= board->dim ||
-            ( first_x == second_x && first_y == second_y )
-        ) {
-            printf( "Invalid move. Try again.\n" );
-            continue;
+        printf( "It is %s's turn.\n", ( *player ).name );
+        bool enteredValidCoordinates = false;
+        // Get coordinates
+        while ( !enteredValidCoordinates ) {
+            printf( "Enter the coordinates of the first card (row col): " );
+            scanf(" %d %d", &first_x, &first_y);
+            printf( "Enter the coordinates of the second card (row col): " );
+            scanf(" %d %d", &second_x, &second_y);
+            // Transform coordinates to index notation
+            first_index = ( first_x * board->dim ) + first_y;
+            second_index = ( second_x * board->dim ) + second_y;
+            // Get objects at said positions
+            firstObject = handleGetObjectAtPosition( board, first_index );
+            secondObject = handleGetObjectAtPosition( board, second_index );
+            // Validate coordinates
+            if (
+                first_x < 0 ||
+                first_x >= board->dim ||
+                first_y < 0 ||
+                first_y >= board->dim ||
+                second_x < 0 ||
+                second_x >= board->dim ||
+                second_y < 0 ||
+                second_y >= board->dim ||
+                ( first_x == second_x && first_y == second_y ) ||
+                firstObject->isFound ||
+                secondObject->isFound
+            ) {
+                printf( "Invalid move. Try again.\n" );
+                continue;
+            }
+            else enteredValidCoordinates = true;
         }
-        isFinishedTurn = true;
-        // Transform coordinates to index notation
-        int first_index = ( first_x * board->dim ) + first_y;
-        int second_index = ( second_x * board->dim ) + second_y;
         // Get objects at said positions
-        firstObject = handleGetObjectAtPosition( board, first_index );
         if ( ( *firstObject ).position.firstInstance == second_index || ( *firstObject ).position.secondInstance == second_index ) {
             ( *firstObject ).isFound = true;
             ( *player ).score++;
             printf( "Match!\n" );
-            continue;
         }
         else {
+            isFinishedTurn = true;
             printf( "No match. Try again.\n" );
         }
-        for (int i = 0; i < board->numPlayers; i++) {
-            
+        printf( "\nThe scores are:\n" );
+        for ( int i = 0; i < board->numPlayers; i++ ) {
+            printf( "%s: %d", board->players[i].name, board->players[i].score );
+            if ( i != ( board->numPlayers - 1 ) ) printf( ", " );
         }
+        printf( "\n" );
+        if ( handleCheckIsGameFinished( *board ) ) return;
+        printBoardState( board );
     }
 }
 void printInitialBoard( Board board ) {
     int dividerLength = ( 6 * board.dim ) + 3;
     printf( "Welcome to the Memory Card Game!\n" );
-    printf( "The game will be played on the following board:\n" );
+    printf( "The game will be played on the following board:\n\n" );
     printf( "  |" );
     for ( int i = 0; i < board.dim; i++ ) {
         printf( "  %d  |", i );
@@ -254,11 +275,12 @@ void printInitialBoard( Board board ) {
         for ( int i = 0; i < dividerLength; i++ ) printf( "-" );
         printf( "\n" );
     }
-    printf( "And the following objects:\n" );
-
+    printf( "\n" );
+    printf( "And the following objects:\n\n" );
     for ( int i = 0; i < board.numObjects; i++ ) {
         printf( "%d. %s\n", i + 1, board.objects[i].name );
     }
+    printf( "\n" );
 }
 void printBoardState( Board* board ) {
     int boardLength = ( board->dim * board->dim );
@@ -288,6 +310,7 @@ void printBoardState( Board* board ) {
             if ( ( i + 1 ) != boardLength ) printf( "|" );
         }
     }
+    printf( "\n" );
 }
 bool handleCheckIsGameFinished(Board board) {
     for (int i = 0; i < board.numObjects; i++) {
@@ -298,5 +321,23 @@ bool handleCheckIsGameFinished(Board board) {
 Object* handleGetObjectAtPosition( Board* board, int n ) {
     for ( int i = 0; i < board->numObjects; i++ ) {
         if ( board->objects[i].position.firstInstance == n || board->objects[i].position.secondInstance == n ) return &( board->objects[i] );
+    }
+}
+void printWinner(Board board) {
+    Player topPlayer = board.players[0];
+    bool isTie = false;
+
+    for (int i = 1; i < board.numPlayers; i++) {
+        if (board.players[i].score > topPlayer.score) {
+            topPlayer = board.players[i];
+            isTie = false;
+        }
+        if (board.players[i].score == topPlayer.score) isTie = true;
+    }
+    if (!isTie) {
+        printf( "Congratulations %s! You won!\n", topPlayer.name );
+    }
+    else {
+        printf( "It's a tie!\n" );
     }
 }
