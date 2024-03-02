@@ -60,7 +60,7 @@ void playGame(Board* board);
  * 
  * @return {void}
 */
-void playTurn(Board* board, Player player);
+void playTurn(Board* board, Player* player);
 void printInitialBoard(Board board);
 /**
  * Prints the current state of the board
@@ -177,18 +177,18 @@ void playGame( Board* board ) {
 
     while ( !handleCheckIsGameFinished( *board ) ) {
         printBoardState( board );
-        playTurn( board, ( *board ).players[playerIndex] );
+        playTurn( board, &( ( *board ).players[playerIndex] ) );
         playerIndex = ( ( playerIndex + 1 ) % ( *board ).numPlayers );
     }
 }
-void playTurn(Board* board, Player player) {
+void playTurn(Board* board, Player* player) {
     int first_x, first_y;
     int second_x, second_y;
     Object* firstObject;
     bool isFinishedTurn = false;
     int boardLength = ( *board ).dim * ( *board ).dim;
 
-    printf( "It is %s's turn.\n", player.name );
+    printf( "It is %s's turn.\n", ( *player ).name );
     
     while ( !isFinishedTurn ) {
         printf( "Enter the coordinates of the first card (row col): " );
@@ -217,14 +217,17 @@ void playTurn(Board* board, Player player) {
         int second_index = ( second_x * ( *board ).dim ) + second_y;
         // Get objects at said positions
         firstObject = handleGetObjectAtPosition( board, first_index );
-        printf( "First pos: %d\nSecond pos: %d\n", ( *firstObject ).position.firstInstance, ( *firstObject ).position.secondInstance );
         if ( ( *firstObject ).position.firstInstance == second_index || ( *firstObject ).position.secondInstance == second_index ) {
             ( *firstObject ).isFound = true;
+            ( *player ).score++;
             printf( "Match!\n" );
             continue;
         }
         else {
             printf( "No match. Try again.\n" );
+        }
+        for (int i = 0; i < ( *board ).numPlayers; i++) {
+            
         }
     }
 }
