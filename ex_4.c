@@ -177,8 +177,8 @@ void playGame( Board* board ) {
 
     while ( !handleCheckIsGameFinished( *board ) ) {
         printBoardState( board );
-        playTurn( board, &( ( *board ).players[playerIndex] ) );
-        playerIndex = ( ( playerIndex + 1 ) % ( *board ).numPlayers );
+        playTurn( board, &( board->players[playerIndex] ) );
+        playerIndex = ( ( playerIndex + 1 ) % board->numPlayers );
     }
 }
 void playTurn(Board* board, Player* player) {
@@ -186,7 +186,7 @@ void playTurn(Board* board, Player* player) {
     int second_x, second_y;
     Object* firstObject;
     bool isFinishedTurn = false;
-    int boardLength = ( *board ).dim * ( *board ).dim;
+    int boardLength = board->dim * board->dim;
 
     printf( "It is %s's turn.\n", ( *player ).name );
     
@@ -199,13 +199,13 @@ void playTurn(Board* board, Player* player) {
         // Validate coordinates
         if (
             first_x < 0 ||
-            first_x >= ( *board ).dim ||
+            first_x >= board->dim ||
             first_y < 0 ||
-            first_y >= ( *board ).dim ||
+            first_y >= board->dim ||
             second_x < 0 ||
-            second_x >= ( *board ).dim ||
+            second_x >= board->dim ||
             second_y < 0 ||
-            second_y >= ( *board ).dim ||
+            second_y >= board->dim ||
             ( first_x == second_x && first_y == second_y )
         ) {
             printf( "Invalid move. Try again.\n" );
@@ -213,8 +213,8 @@ void playTurn(Board* board, Player* player) {
         }
         isFinishedTurn = true;
         // Transform coordinates to index notation
-        int first_index = ( first_x * ( *board ).dim ) + first_y;
-        int second_index = ( second_x * ( *board ).dim ) + second_y;
+        int first_index = ( first_x * board->dim ) + first_y;
+        int second_index = ( second_x * board->dim ) + second_y;
         // Get objects at said positions
         firstObject = handleGetObjectAtPosition( board, first_index );
         if ( ( *firstObject ).position.firstInstance == second_index || ( *firstObject ).position.secondInstance == second_index ) {
@@ -226,7 +226,7 @@ void playTurn(Board* board, Player* player) {
         else {
             printf( "No match. Try again.\n" );
         }
-        for (int i = 0; i < ( *board ).numPlayers; i++) {
+        for (int i = 0; i < board->numPlayers; i++) {
             
         }
     }
@@ -261,8 +261,8 @@ void printInitialBoard( Board board ) {
     }
 }
 void printBoardState( Board* board ) {
-    int boardLength = ( ( *board ).dim * ( *board ).dim );
-    int dividerLength = ( 16 * ( *board ).dim ) + 1;
+    int boardLength = ( board->dim * board->dim );
+    int dividerLength = ( 16 * board->dim ) + 1;
     printf( "Current board state:\n" );
     for ( int i = 0; i < dividerLength; i++ ) printf( "-" );
     printf( "\n" );
@@ -281,7 +281,7 @@ void printBoardState( Board* board ) {
         printf("%s", actualName);
         for ( int b = 0; b < amountOfSpacesNeededAfter; b++ ) printf(" ");
         printf("|");
-        if ( !( ( i + 1 ) % ( *board ).dim ) ) {
+        if ( !( ( i + 1 ) % board->dim ) ) {
             printf( "\n" );
             for ( int b = 0; b < dividerLength; b++ ) printf( "-" );
             printf( "\n" );
@@ -296,7 +296,7 @@ bool handleCheckIsGameFinished(Board board) {
     return true;
 }
 Object* handleGetObjectAtPosition( Board* board, int n ) {
-    for ( int i = 0; i < ( *board ).numObjects; i++ ) {
-        if ( ( *board ).objects[i].position.firstInstance == n || ( *board ).objects[i].position.secondInstance == n ) return &( ( * board ).objects[i] );
+    for ( int i = 0; i < board->numObjects; i++ ) {
+        if ( board->objects[i].position.firstInstance == n || board->objects[i].position.secondInstance == n ) return &( board->objects[i] );
     }
 }
