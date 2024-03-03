@@ -174,7 +174,11 @@ Board initialiseBoard(int argc, char** argv) {
         Position position;
         position.firstInstance = atoi( argv[FIRST_POSITION_INDEX + k] );
         position.secondInstance = atoi( argv[FIRST_POSITION_INDEX + k + 1] );
-        if (position.firstInstance > board_length || position.secondInstance > board_length) {
+        if (position.firstInstance >= board_length ||
+            position.firstInstance < 0 ||
+            position.secondInstance > board_length ||
+            position.secondInstance < 0
+        ) {
             printf( "%s\n", INVALID_INPUT );
             return board;
         }
